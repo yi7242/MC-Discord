@@ -112,6 +112,7 @@ async def say(interaction: discord.Interaction, message: str):
 
 
 @tree.command(guild=discord.Object(id=config.serverid), description="指定したコマンドを送信します")
+@app_commands.default_permissions(administrator=True)
 async def exe(interaction: discord.Interaction, message: str):
     global server_online, proc
     print("command is", message)
