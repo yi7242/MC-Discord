@@ -11,7 +11,7 @@ from sys import exit
 import config
 
 ON_POSIX = 'posix' in sys.builtin_module_names
-q, t = None, None
+log_queue, output_thread = None, None
 
 
 def enqueue_output(out, queue):
@@ -68,14 +68,14 @@ async def ip(interaction: discord.Interaction):
 @tree.command(guild=discord.Object(id=config.serverid), description="サーバーを起動します")
 async def start(interaction: discord.Interaction):
     print("hello")
-    global server_online, proc, q, t
+    global server_online, proc, log_queue, output_thread
     if server_online == False:
         proc = subprocess.Popen(config.boot_command,  stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf-8", bufsize=1, close_fds=ON_POSIX)
         server_online = True
-        q = Queue()
-        t = Thread(target=enqueue_output, args=(proc.stdout, q))
-        t.daemon = True
-        t.start()
+        log_queue = Queue()
+        output_thread = Thread(target=enqueue_output, args=(proc.stdout, log_queue))
+        output_thread.daemon = True
+        output_thread.start()
         print("open")
         await interaction.response.send_message("起動命令を送信しました")
     else:
@@ -90,7 +90,7 @@ async def stop(interaction: discord.Interaction):
     if server_online:
         proc.stdin.write("stop\n")
         proc.stdin.flush()
-        q = None
+        log_queue = None
         await interaction.response.send_message("停止命令を送信しました")
     else:
         await interaction.response.send_message("サーバーは既にオフラインです")
@@ -173,7 +173,7 @@ async def log_output():
         log = ""
         while True:
             try:
-                log += q.get_nowait()
+                log += log_queue.get_nowait()
             except Empty:
                 break
         if log != "":
