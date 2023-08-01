@@ -13,8 +13,6 @@ import config
 ON_POSIX = 'posix' in sys.builtin_module_names
 q, t = None, None
 
-shuturyoku = ["[Server thread/INFO] [minecraft/DedicatedServer]: Done", "joined", "There", "left"]
-
 
 def enqueue_output(out, queue):
     for line in iter(out.readline, b''):
