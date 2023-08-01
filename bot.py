@@ -167,22 +167,19 @@ async def online_check():
             server_online = False
 
 
-@tasks.loop(seconds=0.01)
+@tasks.loop(seconds=0.5)
 async def log_output():
     await client.wait_until_ready()
     global server_online, proc
     if server_online:
-        try:
-            log = q.get_nowait()
-        except Empty:
-            pass
-        else:
-            if log == None:
-                pass
-            else:
-                for i in shuturyoku:
-                    if (i in log):
-                        await log_channel.send(log)
+        log = ""
+        while True:
+            try:
+                log += q.get_nowait()
+            except Empty:
+                break
+        if log != "":
+            await log_channel.send(log)
 
 async def online_check_loop():
     await online_check.start()
