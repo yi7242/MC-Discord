@@ -177,7 +177,10 @@ async def log_output():
             except Empty:
                 break
         if log != "":
-            await log_channel.send(log)
+            if len(log) > 2000:
+                await log_channel.send(log[:1000] + "... 文字数が2000文字を超えるため省略")
+            else:
+                await log_channel.send(log)
 
 async def online_check_loop():
     await online_check.start()
