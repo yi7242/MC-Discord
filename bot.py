@@ -36,19 +36,19 @@ async def on_ready():
     global log_channel
     print(f'Logged in as: {client.user.name}')
     print(f'With ID: {client.user.id}')
-    log_channel = client.get_channel(config.log_channel_id)
+    log_channel = client.get_channel(config.LOG_CHANNEL_ID)
     online_check.start()
     log_output.start()
-    await tree.sync(guild=discord.Object(id=config.serverid))
+    await tree.sync(guild=discord.Object(id=config.SERVER_ID))
 
 
 
-@tree.command(guild=discord.Object(id=config.serverid), description="ヘルプを表示")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="ヘルプを表示")
 async def help(interaction: discord.Interaction):
     await interaction.response.send_message("""    
     --ヘルプ--
     `/help` ヘルプを表示
-    `/ip` ipアドレスを表示
+    `/IPADDRESS` ipアドレスを表示
     --サーバー起動--
     `/status` サーバーのオンライン状態を表示
     `/start` サーバーの起動
@@ -60,17 +60,17 @@ async def help(interaction: discord.Interaction):
     --ボット--
     `/kill` botを強制終了、管理者権限が必要です""")
 
-@tree.command(guild=discord.Object(id=config.serverid), description="ipアドレスを表示")
-async def ip(interaction: discord.Interaction):
-    await interaction.response.send_message(f"ipアドレスは{config.ip}です。")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="ipアドレスを表示")
+async def IPADDRESS(interaction: discord.Interaction):
+    await interaction.response.send_message(f"ipアドレスは{config.IPADDRESS}です。")
 
 
-@tree.command(guild=discord.Object(id=config.serverid), description="サーバーを起動します")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="サーバーを起動します")
 async def start(interaction: discord.Interaction):
     print("hello")
     global server_online, proc, log_queue, output_thread
     if server_online == False:
-        proc = subprocess.Popen(config.boot_command,  stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf-8", bufsize=1, close_fds=ON_POSIX)
+        proc = subprocess.Popen(config.BOOT_COMMAND,  stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf-8", bufsize=1, close_fds=ON_POSIX)
         server_online = True
         log_queue = Queue()
         output_thread = Thread(target=enqueue_output, args=(proc.stdout, log_queue))
@@ -83,7 +83,7 @@ async def start(interaction: discord.Interaction):
         print("nono")
 
 
-@tree.command(guild=discord.Object(id=config.serverid), description="サーバーを停止します")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="サーバーを停止します")
 async def stop(interaction: discord.Interaction):
     print("stop")
     global server_online, proc
@@ -96,7 +96,7 @@ async def stop(interaction: discord.Interaction):
         await interaction.response.send_message("サーバーは既にオフラインです")
 
 
-@tree.command(guild=discord.Object(id=config.serverid), description="マイクラ内のチャットにメッセージを送信します")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="マイクラ内のチャットにメッセージを送信します")
 async def say(interaction: discord.Interaction, message: str):
     global server_online, proc
     if server_online:
@@ -109,7 +109,7 @@ async def say(interaction: discord.Interaction, message: str):
         await interaction.response.send_message("サーバーはオフラインです")
 
 
-@tree.command(guild=discord.Object(id=config.serverid), description="指定したコマンドを送信します")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="指定したコマンドを送信します")
 @app_commands.default_permissions(administrator=True)
 async def exe(interaction: discord.Interaction, message: str):
     global server_online, proc
@@ -122,7 +122,7 @@ async def exe(interaction: discord.Interaction, message: str):
         await interaction.response.send_message("サーバーはオフラインです")
 
 
-@tree.command(guild=discord.Object(id=config.serverid), description="現在のサーバーの接続人数を確認します")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="現在のサーバーの接続人数を確認します")
 async def list(interaction: discord.Interaction):
     global server_online, proc
     if not server_online:
@@ -133,7 +133,7 @@ async def list(interaction: discord.Interaction):
         await interaction.response.send_message("listコマンドを送信しました")
 
 
-@tree.command(guild=discord.Object(id=config.serverid), description="サーバーのオンライン状態を確認します")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="サーバーのオンライン状態を確認します")
 async def status(interaction: discord.Interaction):
     global server_online
     if server_online:
@@ -142,7 +142,7 @@ async def status(interaction: discord.Interaction):
         await interaction.response.send_message("サーバーはオフラインです")
 
 
-@tree.command(guild=discord.Object(id=config.serverid), description="botを停止します。管理者権限が必要です。")
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="botを停止します。管理者権限が必要です。")
 @app_commands.default_permissions(administrator=True)
 async def kill(interaction: discord.Interaction):
     print("killed")
