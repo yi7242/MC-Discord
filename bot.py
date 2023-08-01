@@ -48,7 +48,7 @@ async def help(interaction: discord.Interaction):
     await interaction.response.send_message("""    
     --ヘルプ--
     `/help` ヘルプを表示
-    `/IPADDRESS` ipアドレスを表示
+    `/ipaddress` ipアドレスを表示
     --サーバー起動--
     `/status` サーバーのオンライン状態を表示
     `/start` サーバーの起動
@@ -56,12 +56,12 @@ async def help(interaction: discord.Interaction):
     --マイクラ--
     `/say メッセージ` サーバーチャットにメッセージを送信
     `/list` 現在オンラインのプレイヤー数を表示
-    `/exe コマンド` マイクラ内でコマンドを実行
+    `/exe コマンド` マイクラ内でコマンドを実行、管理者権限が必要です
     --ボット--
     `/kill` botを強制終了、管理者権限が必要です""")
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="ipアドレスを表示")
-async def IPADDRESS(interaction: discord.Interaction):
+async def ipaddress(interaction: discord.Interaction):
     await interaction.response.send_message(f"ipアドレスは{config.IPADDRESS}です。")
 
 
@@ -165,7 +165,7 @@ async def online_check():
             server_online = False
 
 
-@tasks.loop(seconds=0.5)
+@tasks.loop(seconds=config.LOG_INTERVAL)
 async def log_output():
     await client.wait_until_ready()
     global server_online, proc
