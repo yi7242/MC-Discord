@@ -42,7 +42,15 @@ async def on_ready():
     log_output.start()
     await tree.sync(guild=discord.Object(id=config.SERVER_ID))
 
-
+@client.event
+async def on_message(message):
+    if message.author.bot:
+        return
+    global server_online, proc
+    if server_online and message.channel == chat_channel:
+        command = f'tellraw @a \"<{message.author.global_name}> {message.content}\"\n'
+        proc.stdin.write(command)
+        proc.stdin.flush()
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="ヘルプを表示")
 async def help(interaction: discord.Interaction):
