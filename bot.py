@@ -37,7 +37,6 @@ async def on_ready():
     print(f'With ID: {client.user.id}')
     log_channel = client.get_channel(config.LOG_CHANNEL_ID)
     chat_channel = client.get_channel(config.CHAT_CHANNEL_ID)
-    online_check.start()
     log_output.start()
     await tree.sync(guild=discord.Object(id=config.SERVER_ID))
 
@@ -192,8 +191,6 @@ async def check_send(log, channel):
         else:
             await channel.send(log)
 
-async def online_check_loop():
-    await online_check.start()
 async def log_output_loop():
     await log_output.start()
 
