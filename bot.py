@@ -64,9 +64,10 @@ async def help(interaction: discord.Interaction):
     `/say メッセージ` サーバーチャットにメッセージを送信
     `/list` 現在オンラインのプレイヤー数を表示
     `/exe コマンド` マイクラ内でコマンドを実行、管理者権限が必要
-    `/resetmc` サーバーにSIGTERMシグナルを送信、管理者権限が必要
-    `/killmc` xX最終奥義Xx サーバープロセスをkill、管理者権限必要が必要
-    --ボット--
+    
+    ※以下は必要な場合のみ使用してください
+    `/termmc` サーバーにSIGTERMシグナルを送信
+    `/killmc` xX最終奥義Xx サーバープロセスをkill
     `/killbot` botを強制終了、管理者権限が必要です""")
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="ipアドレスを表示")
@@ -152,6 +153,22 @@ async def killbot(interaction: discord.Interaction):
         proc.stdin.flush()
         await interaction.response.send_message("botを停止します")
     exit()
+
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="サーバーにSIGTERMを送信します。")
+async def termmc(interaction: discord.Interaction):
+    if online_check():
+        proc.terminate()
+        await interaction.response.send_message("botにSIGTERMを送信しました")
+    else:
+        await interaction.response.send_message("サーバーはオフラインです")
+
+@tree.command(guild=discord.Object(id=config.SERVER_ID), description="サーバーをkillします。")
+async def killmc(interaction: discord.Interaction):
+    if online_check():
+        proc.kill()
+        await interaction.response.send_message("サーバーをkillしました。")
+    else:
+        await interaction.response.send_message("サーバーはオフラインです")
 
 def online_check():
     global proc
