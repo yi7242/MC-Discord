@@ -22,23 +22,17 @@ tree = app_commands.CommandTree(client)
 proc = None
 
 def enqueue_output(out, queue):
-    for line in iter(out.readline, b''):
-        if line == "":
+    while True:
+        line = out.readline()
+        if license == b"":
             continue
         else:
-            try:
-                decoded_line = line.decode("shift-jis", errors="replace")  # Decode from Shift-JIS to Unicode
-            except AttributeError:
-                print("error2", line)
-                decoded_line = line
-            print(decoded_line, end="")
-            queue.put(decoded_line)
-            
-    out.close()
-
-
-# log_channel = None
-# chat_channel = None
+            if windows:
+                decode_line = line.decode("cp932")
+            else:
+                decode_line = line.decode("utf-8")
+            print(decode_line,end="")
+            queue.put(decode_line)
 
 
 @client.event
@@ -58,7 +52,6 @@ async def on_message(message):
     global proc
     if online_check() and message.channel == chat_channel:
         command = f'tellraw @a \"<{message.author.global_name}> {message.content}\"'
-        print("aaa", command)
         send_command(command)
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="ヘルプを表示")
 async def help(interaction: discord.Interaction):
@@ -89,8 +82,7 @@ async def ipaddress(interaction: discord.Interaction):
 async def start(interaction: discord.Interaction):
     global proc, log_queue, output_thread
     if not online_check():
-        enc = "utf-8"
-        proc = subprocess.Popen(config.BOOT_COMMAND,  stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding=enc, bufsize=1, close_fds=ON_POSIX)
+        proc = subprocess.Popen(config.BOOT_COMMAND,  stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=ON_POSIX)
         log_queue = Queue()
         output_thread = Thread(target=enqueue_output, args=(proc.stdout, log_queue))
         output_thread.daemon = True
@@ -219,7 +211,7 @@ def send_command(command, raw=False):
     if online_check():
         if not raw:
             command += "\n"
-        proc.stdin.write(command)
+        proc.stdin.write(command.encode("utf-8"))
         proc.stdin.flush()
 
 async def log_output_loop():
