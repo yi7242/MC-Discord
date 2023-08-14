@@ -63,9 +63,11 @@ async def help(interaction: discord.Interaction):
     --マイクラ--
     `/say メッセージ` サーバーチャットにメッセージを送信
     `/list` 現在オンラインのプレイヤー数を表示
-    `/exe コマンド` マイクラ内でコマンドを実行、管理者権限が必要です
+    `/exe コマンド` マイクラ内でコマンドを実行、管理者権限が必要
+    `/resetmc` サーバーにSIGTERMシグナルを送信、管理者権限が必要
+    `/killmc` xX最終奥義Xx サーバープロセスをkill、管理者権限必要が必要
     --ボット--
-    `/kill` botを強制終了、管理者権限が必要です""")
+    `/killbot` botを強制終了、管理者権限が必要です""")
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="ipアドレスを表示")
 async def ipaddress(interaction: discord.Interaction):
@@ -143,7 +145,7 @@ async def status(interaction: discord.Interaction):
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="botを停止します。管理者権限が必要です。")
 @app_commands.default_permissions(administrator=True)
-async def kill(interaction: discord.Interaction):
+async def killbot(interaction: discord.Interaction):
     print("killed")
     if online_check():
         proc.stdin.write("stop\n")
