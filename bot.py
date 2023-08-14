@@ -24,7 +24,7 @@ proc = None
 def enqueue_output(out, queue):
     while True:
         line = out.readline()
-        if license == b"":
+        if line == b"":
             continue
         else:
             if windows:

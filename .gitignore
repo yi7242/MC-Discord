@@ -1,3 +1,10 @@
 .env
 /__pycache__
 venv/
+build/
+/bot.build
+/bot.dist
+/bot.onefile-build
+bot.exe
+bot.spec
+/dist
