@@ -178,8 +178,10 @@ async def log_output():
         while True:
             try:
                 log_line = log_queue.get_nowait()
-                if "[minecraft/DedicatedServer]" in log_line:
-                    chat_log += log_line
+                chat_detectstr = "[minecraft/DedicatedServer]: "
+                if chat_detectstr in log_line:
+                    detectind = log_line.find(chat_detectstr)
+                    chat_log += log_line[len(chat_detectstr)+detectind:]
                 log += log_line
             except Empty:
                 break
