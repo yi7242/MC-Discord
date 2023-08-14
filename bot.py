@@ -14,7 +14,6 @@ ON_POSIX = 'posix' in sys.builtin_module_names
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
-server_online = False
 proc = None
 
 def enqueue_output(out, queue):
@@ -46,8 +45,8 @@ async def on_ready():
 async def on_message(message):
     if message.author.bot:
         return
-    global server_online, proc
-    if server_online and message.channel == chat_channel:
+    global proc
+    if online_check() and message.channel == chat_channel:
         command = f'tellraw @a \"<{message.author.global_name}> {message.content}\"\n'
         proc.stdin.write(command)
         proc.stdin.flush()
@@ -76,10 +75,9 @@ async def ipaddress(interaction: discord.Interaction):
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="サーバーを起動します")
 async def start(interaction: discord.Interaction):
-    global server_online, proc, log_queue, output_thread
-    if server_online == False:
+    global proc, log_queue, output_thread
+    if not online_check():
         proc = subprocess.Popen(config.BOOT_COMMAND,  stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf-8", bufsize=1, close_fds=ON_POSIX)
-        server_online = True
         log_queue = Queue()
         output_thread = Thread(target=enqueue_output, args=(proc.stdout, log_queue))
         output_thread.daemon = True
@@ -91,8 +89,8 @@ async def start(interaction: discord.Interaction):
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="サーバーを停止します")
 async def stop(interaction: discord.Interaction):
-    global server_online, proc
-    if server_online:
+    global proc
+    if online_check():
         proc.stdin.write("stop\n")
         proc.stdin.flush()
         log_queue = None
@@ -103,8 +101,8 @@ async def stop(interaction: discord.Interaction):
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="マイクラ内のチャットにメッセージを送信します")
 async def say(interaction: discord.Interaction, message: str):
-    global server_online, proc
-    if server_online:
+    global proc
+    if online_check():
         proc.stdin.write("say "+message + "\n")
         proc.stdin.flush()
         await interaction.response.send_message("発言を送信しました")
@@ -116,8 +114,8 @@ async def say(interaction: discord.Interaction, message: str):
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="指定したコマンドを送信します")
 @app_commands.default_permissions(administrator=True)
 async def exe(interaction: discord.Interaction, message: str):
-    global server_online, proc
-    if server_online:
+    global proc
+    if online_check():
         proc.stdin.write(message + "\n")
         proc.stdin.flush()
         await interaction.response.send_message("コマンドを送信しました")
@@ -127,8 +125,8 @@ async def exe(interaction: discord.Interaction, message: str):
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="現在のサーバーの接続人数を確認します")
 async def list(interaction: discord.Interaction):
-    global server_online, proc
-    if not server_online:
+    global proc
+    if not online_check():
         await interaction.response.send_message("サーバーはオフラインです")
     else:
         proc.stdin.write("list\n")
@@ -138,8 +136,7 @@ async def list(interaction: discord.Interaction):
 
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="サーバーのオンライン状態を確認します")
 async def status(interaction: discord.Interaction):
-    global server_online
-    if server_online:
+    if online_check():
         await interaction.response.send_message("サーバーはオンラインです")
     else:
         await interaction.response.send_message("サーバーはオフラインです")
@@ -149,30 +146,26 @@ async def status(interaction: discord.Interaction):
 @app_commands.default_permissions(administrator=True)
 async def kill(interaction: discord.Interaction):
     print("killed")
-    if server_online:
+    if online_check():
         proc.stdin.write("stop\n")
         proc.stdin.flush()
         await interaction.response.send_message("botを停止します")
     exit()
 
-
-# Background tasks
-@tasks.loop(seconds=0.5)
-async def online_check():
-    await client.wait_until_ready()
-    global server_online, proc
+def online_check():
+    global proc
     if proc != None:
         if proc.poll() == None:
-            server_online = True
+            return True
         else:
-            server_online = False
+            return False
 
 
 @tasks.loop(seconds=config.LOG_INTERVAL)
 async def log_output():
     await client.wait_until_ready()
-    global server_online, proc
-    if server_online:
+    global proc
+    if online_check():
         log = ""
         chat_log = ""
         while True:
