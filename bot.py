@@ -186,8 +186,10 @@ async def log_output():
                 log += log_line
             except Empty:
                 break
-        await check_send(chat_log, chat_channel)
-        await check_send(log, log_channel)
+        if config.SEND_CHAT:
+            await check_send(chat_log, chat_channel)
+        if config.SEND_LOG:
+            await check_send(log, log_channel)
 
 # 文字数をチェックし、送信する
 async def check_send(log, channel):
