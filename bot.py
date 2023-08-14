@@ -1,3 +1,4 @@
+from os import name as osname
 import discord
 from discord.ext import tasks
 from discord import app_commands
@@ -10,6 +11,10 @@ from sys import exit
 # configファイル
 import config
 
+
+windows = False
+if osname == "nt":
+    windows = True
 ON_POSIX = 'posix' in sys.builtin_module_names
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
@@ -21,8 +26,14 @@ def enqueue_output(out, queue):
         if line == "":
             continue
         else:
-            print(line, end="")
-            queue.put(line)
+            try:
+                decoded_line = line.decode("shift-jis", errors="replace")  # Decode from Shift-JIS to Unicode
+            except AttributeError:
+                print("error2", line)
+                decoded_line = line
+            print(decoded_line, end="")
+            queue.put(decoded_line)
+            
     out.close()
 
 
@@ -46,10 +57,9 @@ async def on_message(message):
         return
     global proc
     if online_check() and message.channel == chat_channel:
-        command = f'tellraw @a \"<{message.author.global_name}> {message.content}\"\n'
-        proc.stdin.write(command)
-        proc.stdin.flush()
-
+        command = f'tellraw @a \"<{message.author.global_name}> {message.content}\"'
+        print("aaa", command)
+        send_command(command)
 @tree.command(guild=discord.Object(id=config.SERVER_ID), description="ヘルプを表示")
 async def help(interaction: discord.Interaction):
     await interaction.response.send_message("""    
@@ -79,7 +89,8 @@ async def ipaddress(interaction: discord.Interaction):
 async def start(interaction: discord.Interaction):
     global proc, log_queue, output_thread
     if not online_check():
-        proc = subprocess.Popen(config.BOOT_COMMAND,  stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf-8", bufsize=1, close_fds=ON_POSIX)
+        enc = "utf-8"
+        proc = subprocess.Popen(config.BOOT_COMMAND,  stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding=enc, bufsize=1, close_fds=ON_POSIX)
         log_queue = Queue()
         output_thread = Thread(target=enqueue_output, args=(proc.stdout, log_queue))
         output_thread.daemon = True
@@ -93,8 +104,7 @@ async def start(interaction: discord.Interaction):
 async def stop(interaction: discord.Interaction):
     global proc
     if online_check():
-        proc.stdin.write("stop\n")
-        proc.stdin.flush()
+        send_command("stop")
         log_queue = None
         await interaction.response.send_message("停止命令を送信しました")
     else:
@@ -105,11 +115,9 @@ async def stop(interaction: discord.Interaction):
 async def say(interaction: discord.Interaction, message: str):
     global proc
     if online_check():
-        proc.stdin.write("say "+message + "\n")
-        proc.stdin.flush()
+        send_command("say "+message)
         await interaction.response.send_message("発言を送信しました")
     else:
-        print(message.encode('shift_jis'))
         await interaction.response.send_message("サーバーはオフラインです")
 
 
@@ -118,8 +126,7 @@ async def say(interaction: discord.Interaction, message: str):
 async def exe(interaction: discord.Interaction, message: str):
     global proc
     if online_check():
-        proc.stdin.write(message + "\n")
-        proc.stdin.flush()
+        send_command(message)
         await interaction.response.send_message("コマンドを送信しました")
     else:
         await interaction.response.send_message("サーバーはオフラインです")
@@ -131,8 +138,7 @@ async def list(interaction: discord.Interaction):
     if not online_check():
         await interaction.response.send_message("サーバーはオフラインです")
     else:
-        proc.stdin.write("list\n")
-        proc.stdin.flush()
+        send_command("list")
         await interaction.response.send_message("listコマンドを送信しました")
 
 
@@ -149,8 +155,7 @@ async def status(interaction: discord.Interaction):
 async def killbot(interaction: discord.Interaction):
     print("killed")
     if online_check():
-        proc.stdin.write("stop\n")
-        proc.stdin.flush()
+        send_command("stop")
         await interaction.response.send_message("botを停止します")
     exit()
 
@@ -169,14 +174,6 @@ async def killmc(interaction: discord.Interaction):
         await interaction.response.send_message("サーバーをkillしました。")
     else:
         await interaction.response.send_message("サーバーはオフラインです")
-
-def online_check():
-    global proc
-    if proc != None:
-        if proc.poll() == None:
-            return True
-        else:
-            return False
 
 
 @tasks.loop(seconds=config.LOG_INTERVAL)
@@ -208,6 +205,22 @@ async def check_send(log, channel):
             await channel.send(log[:1900] + "... 文字数が2000文字を超えるため省略")
         else:
             await channel.send(log)
+
+def online_check():
+    global proc
+    if proc != None:
+        if proc.poll() == None:
+            return True
+        else:
+            return False
+        
+def send_command(command, raw=False):
+    global proc
+    if online_check():
+        if not raw:
+            command += "\n"
+        proc.stdin.write(command)
+        proc.stdin.flush()
 
 async def log_output_loop():
     await log_output.start()
