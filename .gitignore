@@ -1,5 +1,10 @@
-.env
+# python関係
 /__pycache__
+
+# config関係
+.env
+
+# build周り
 venv/
 build/
 /bot.build
