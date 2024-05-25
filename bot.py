@@ -218,23 +218,19 @@ async def killmc(interaction: discord.Interaction):
     description="ワールドのバックアップを作成します。",
 )
 async def backup(interaction: discord.Interaction):
-    if online_check():
-        await interaction.response.defer(thinking=True)
-        filename = "world_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        shutil.make_archive(filename, format="zip", root_dir="world")
-        s3_client = boto3.client(
-            service_name="s3",
-            endpoint_url=config.S3_URL,
-            aws_access_key_id=config.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY,
-            region_name="auto",
-        )
+    await interaction.response.defer(thinking=True)
+    filename = "world_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    shutil.make_archive(filename, format="zip", root_dir="world")
+    s3_client = boto3.client(
+        service_name="s3",
+        endpoint_url=config.S3_URL,
+        aws_access_key_id=config.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY,
+        region_name="auto",
+    )
 
-        url = aws.upload_and_get_url(s3_client, config.BUCKET_NAME, "test.zip")
-        await interaction.followup.send(f"バックアップが作成されました: {url}")
-
-    else:
-        await interaction.response.send_message("サーバーはオフラインです")
+    url = aws.upload_and_get_url(s3_client, config.BUCKET_NAME, "test.zip")
+    await interaction.followup.send(f"バックアップが作成されました: {url}")
 
 
 @tasks.loop(seconds=config.LOG_INTERVAL)
