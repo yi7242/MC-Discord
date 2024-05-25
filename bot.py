@@ -229,7 +229,7 @@ async def backup(interaction: discord.Interaction):
         region_name="auto",
     )
 
-    url = aws.upload_and_get_url(s3_client, config.BUCKET_NAME, "test.zip")
+    url = aws.upload_and_get_url(s3_client, config.BUCKET_NAME, filename + ".zip")
     await interaction.followup.send(f"バックアップが作成されました: {url}")
 
 

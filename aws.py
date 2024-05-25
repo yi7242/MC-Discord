@@ -91,15 +91,3 @@ def upload_and_get_url(s3_client, bucket_name, object_name, expiration=3600):
 
     # Generate a presigned URL
     return create_presigned_url(s3_client, bucket_name, object_name, expiration)
-
-
-if __name__ == "__main__":
-    s3_client = boto3.client(
-        service_name="s3",
-        endpoint_url=config.S3_URL,
-        aws_access_key_id=config.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY,
-        region_name="auto",
-    )
-    url = upload_and_get_url(s3_client, config.BUCKET_NAME, "test.zip")
-    print(url)
