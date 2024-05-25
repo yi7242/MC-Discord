@@ -1,5 +1,5 @@
 import boto3
-import mcdiscord.config as config
+import config
 import io
 import logging
 from botocore.exceptions import ClientError
