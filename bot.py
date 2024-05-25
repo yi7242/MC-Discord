@@ -318,8 +318,5 @@ def send_command(command, raw=False):
 async def log_output_loop():
     await log_output.start()
 
-async def upload():
-    
-
 
 client.run(config.APIKEY)
