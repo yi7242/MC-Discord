@@ -229,6 +229,36 @@ async def backup(interaction: discord.Interaction):
         region_name="auto",
     )
 
+    # バケット内の全オブジェクトをリスト
+    response = s3_client.list_objects_v2(Bucket=config.bucket_name)
+
+    # オブジェクトが存在しない場合の処理
+    if "Contents" not in response:
+        print("No objects found in the bucket.")
+    else:
+        # 最古のファイルを特定する
+        oldest_file = None
+        oldest_file_date = None
+
+        for obj in response["Contents"]:
+            file_key = obj["Key"]
+            last_modified = obj["LastModified"]
+            if oldest_file_date is None:
+                oldest_file_date = last_modified
+                oldest_file = file_key
+            else:
+                if last_modified < oldest_file_date:
+                    oldest_file_date = last_modified
+                    oldest_file = file_key
+
+        # 最古のファイルを削除する
+        if oldest_file:
+            s3_client.delete_object(Bucket=config.BUCKET_NAME, Key=oldest_file)
+            print(
+                f"Deleted oldest file: {oldest_file} (Last Modified: {oldest_file_date})"
+            )
+        else:
+            print("No files found to delete.")
     url = aws.upload_and_get_url(s3_client, config.BUCKET_NAME, filename + ".zip")
     await interaction.followup.send(f"バックアップが作成されました: {url}")
 
@@ -263,7 +293,7 @@ async def check_send(log, channel):
         for i in range(0, len(log), 2000):
             chatqueue.put(log[i : i + 2000])
 
-    if chatqueue.empty():
+    if not chatqueue.empty():
         await channel.send(chatqueue.get())
 
 
@@ -287,6 +317,9 @@ def send_command(command, raw=False):
 
 async def log_output_loop():
     await log_output.start()
+
+async def upload():
+    
 
 
 client.run(config.APIKEY)
