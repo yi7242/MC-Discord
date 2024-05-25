@@ -30,7 +30,7 @@ config = {
     # 以下はFTB University 1.16の場合
     # "CHAT_DETECT_STR" : "[minecraft/DedicatedServer]:"
     # S3用URL
-    "S3-URL": "https://5a637328c8c7ec9e222ba609fbf619a2.r2.cloudflarestorage.com/mc-discord-kcs2024",
+    "S3-URL": "",
 }
 
 # .envが存在する場合、.envでconfigを上書き
