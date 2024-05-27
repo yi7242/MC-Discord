@@ -14,6 +14,8 @@
 
 Discord Developerへアクセス、APIキー発行、.envに貼っておく
 
+その他serveridやらチャットidやらs3のキーやらを.envに貼っておく
+
 `sudo apt update`
 
 `sudo apt install python3`
@@ -21,14 +23,6 @@ Discord Developerへアクセス、APIキー発行、.envに貼っておく
 server.jarがあるディレクトリで以下を実行
 
 `git clone https://github.com/yi7242/MC-Discord.git`
-
-以下ディレクトリ構造
-
-|-server.jar
-
-|-MC-Discord(本レポジトリ)
-
- |-bot.py(ボット本体)
 
 `python3 -m pip install -r MC-Discord/requirements.txt`
 
