@@ -6,10 +6,13 @@
 - サーバープロセスの起動・停止
 - Discordからマイクラへのチャット・コマンドの送信
 - サーバーログをDiscordへ送信
+
 等があります。
 
 ## 使い方
-Discord Developerへアクセス、APIキー発行、config.pyに貼っておく
+(今度書き直します)
+
+Discord Developerへアクセス、APIキー発行、.envに貼っておく
 
 `sudo apt update`
 `sudo apt install python3`
