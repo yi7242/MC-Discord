@@ -219,9 +219,7 @@ async def killmc(interaction: discord.Interaction):
 )
 async def backup(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
-    filename = "world_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    shutil.make_archive(filename, format="zip", root_dir="world")
-    s3_client = boto3.client(
+    s3_client: boto3.client = boto3.client(
         service_name="s3",
         endpoint_url=config.S3_URL,
         aws_access_key_id=config.AWS_ACCESS_KEY_ID,
@@ -230,12 +228,8 @@ async def backup(interaction: discord.Interaction):
     )
 
     # バケット内の全オブジェクトをリスト
-    response = s3_client.list_objects_v2(Bucket=config.bucket_name)
-
-    # オブジェクトが存在しない場合の処理
-    if "Contents" not in response:
-        print("No objects found in the bucket.")
-    else:
+    response = s3_client.list_objects(Bucket=config.BUCKET_NAME)
+    if len(response["Contents"]) >= 5:
         # 最古のファイルを特定する
         oldest_file = None
         oldest_file_date = None
@@ -259,6 +253,8 @@ async def backup(interaction: discord.Interaction):
             )
         else:
             print("No files found to delete.")
+    filename = "world_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    shutil.make_archive(filename, format="zip", root_dir="world")
     url = aws.upload_and_get_url(s3_client, config.BUCKET_NAME, filename + ".zip")
     await interaction.followup.send(f"バックアップが作成されました: {url}")
 
