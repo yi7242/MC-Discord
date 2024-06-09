@@ -118,7 +118,7 @@ async def start(interaction: discord.Interaction):
     guild=discord.Object(id=config.SERVER_ID), description="サーバーを停止します"
 )
 async def stop(interaction: discord.Interaction):
-    global prock, log_queue
+    global proc, log_queue
     if online_check():
         send_command("stop")
         await interaction.response.send_message("停止命令を送信しました")
