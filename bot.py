@@ -26,7 +26,9 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 proc = None
-chatqueue = Queue()
+log_queue = Queue()
+divided_chat_queue = Queue()
+divided_log_queue = Queue()
 
 
 def enqueue_output(out, queue):
@@ -104,7 +106,6 @@ async def start(interaction: discord.Interaction):
             stdout=subprocess.PIPE,
             close_fds=ON_POSIX,
         )
-        log_queue = Queue()
         output_thread = Thread(target=enqueue_output, args=(proc.stdout, log_queue))
         output_thread.daemon = True
         output_thread.start()
@@ -117,10 +118,9 @@ async def start(interaction: discord.Interaction):
     guild=discord.Object(id=config.SERVER_ID), description="サーバーを停止します"
 )
 async def stop(interaction: discord.Interaction):
-    global proc
+    global prock, log_queue
     if online_check():
         send_command("stop")
-        log_queue = None
         await interaction.response.send_message("停止命令を送信しました")
     else:
         await interaction.response.send_message("サーバーは既にオフラインです")
@@ -276,27 +276,28 @@ async def log_output():
                 log += log_line
             except Empty:
                 break
+        if log != "":
+            for i in range(0, len(log), 2000):
+                divided_log_queue.put(log[i : i + 2000])
+        if chat_log != "":
+            for i in range(0, len(chat_log), 2000):
+                divided_chat_queue.put(chat_log[i : i + 2000])
         if config.SEND_CHAT:
-            await check_send(chat_log, chat_channel)
+            await message_sender(divided_chat_queue, chat_channel)
         if config.SEND_LOG:
-            await check_send(log, log_channel)
+            await message_sender(divided_log_queue, log_channel)
 
 
 # 文字数をチェックし、送信する
-async def check_send(log, channel):
-    global chatqueue
-    if log != "":
-        for i in range(0, len(log), 2000):
-            chatqueue.put(log[i : i + 2000])
-
-    if not chatqueue.empty():
-        await channel.send(chatqueue.get())
+async def message_sender(divided_queue, channel):
+    if not divided_queue.empty():
+        await channel.send(divided_queue.get())
 
 
 def online_check():
     global proc
-    if proc != None:
-        if proc.poll() == None:
+    if proc is not None:
+        if proc.poll() is None:
             return True
         else:
             return False
